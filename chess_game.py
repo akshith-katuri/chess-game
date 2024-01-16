@@ -48,6 +48,7 @@ class ChessGame:
         self.is_pawn_promotion = False
         self.is_game_over = False
         self.selection = 100
+        self.counter = 0
 
     def initialize_piece_images(self):
         # Load game piece images
@@ -102,19 +103,14 @@ class ChessGame:
         This function is responsible for drawing 8*8 chess board using pygame draw funciton at the correct psition
         """
         for i in range(64):
-            column = (i % 8)
-            row = (i // 8)
-            if (row % 2 == 0 and i % 2 == 0) or (row % 2 != 0 and i % 2 == 1):
-                pygame.draw.rect(self.screen, (200, 200, 200),
-                                 pygame.Rect(self.board_start[0] + column * self.SQUARE_SIZE,
-                                             self.board_start[1] + row * self.SQUARE_SIZE,
-                                             self.SQUARE_SIZE, self.SQUARE_SIZE))
-            else:
-                pygame.draw.rect(self.screen, (0, 113, 0),
-                                 pygame.Rect(self.board_start[0] + column * self.SQUARE_SIZE,
-                                             self.board_start[1] + row * self.SQUARE_SIZE,
-                                             self.SQUARE_SIZE, self.SQUARE_SIZE))
-
+            column, row = i % 8, i // 8
+            color = (200, 200, 200) if (row % 2 == 0 and i % 2 == 0) or (row % 2 != 0 and i % 2 == 1) else (0, 113, 0)
+            
+            pygame.draw.rect(self.screen, color,
+                            pygame.Rect(self.board_start[0] + column * self.SQUARE_SIZE,
+                                        self.board_start[1] + row * self.SQUARE_SIZE,
+                                        self.SQUARE_SIZE, self.SQUARE_SIZE))
+    
     def draw_pieces(self):
         """
         This function is responsible for drawing the pieces at their correct location after every move, displaying
@@ -131,9 +127,16 @@ class ChessGame:
                 textRect = text.get_rect()
                 textRect.center = (315, 725)
                 self.screen.blit(text, textRect)
-                # Pawn promotion
-                # if self.is_pawn_promotion:
-                #     self.pawn_promotion(self.click_pos, self.player_turn)
+
+                # Flash king square with red border when in check
+                if self.is_king_in_check('white') and self.counter < 15:
+                    pygame.draw.rect(self.screen, (240, 0, 0),
+                                         pygame.Rect(
+                                             self.white_locations[self.white_pieces.index('king')][0] * self.SQUARE_SIZE + self.board_start[0],
+                                             self.white_locations[self.white_pieces.index('king')][1] * self.SQUARE_SIZE + self.board_start[1],
+                                             self.SQUARE_SIZE,
+                                             self.SQUARE_SIZE), 5)
+                
                 if self.selection == i:
                     if self.is_moved:
                         self.is_moved = False
@@ -236,9 +239,16 @@ class ChessGame:
                 textRect = text.get_rect()
                 textRect.center = (315, 20)
                 self.screen.blit(text, textRect)
-                # Pawn promotion
-                # if self.is_pawn_promotion:
-                #     self.pawn_promotion(self.click_pos, self.player_turn)
+                
+                # Flash king square with red border when in check
+                if self.is_king_in_check('black') and self.counter < 15:
+                    pygame.draw.rect(self.screen, (240, 0, 0),
+                                         pygame.Rect(
+                                             self.black_locations[self.black_pieces.index('king')][0] * self.SQUARE_SIZE + self.board_start[0],
+                                             self.black_locations[self.black_pieces.index('king')][1] * self.SQUARE_SIZE + self.board_start[1],
+                                             self.SQUARE_SIZE,
+                                             self.SQUARE_SIZE), 5)
+                
                 if self.selection == i:
                     if self.is_moved:
                         self.is_moved = False
@@ -330,7 +340,7 @@ class ChessGame:
             pygame.draw.circle(self.screen, (120, 120, 120), (
                 move[0] * self.SQUARE_SIZE + self.SQUARE_SIZE / 2 + self.board_start[0],
                 move[1] * self.SQUARE_SIZE + self.SQUARE_SIZE / 2 + self.board_start[1]), 10)
-
+            
         # Draws captured black pieces
         for i in range(len(self.captured_pieces_black)):
             index = self.piece_list.index(self.captured_pieces_black[i])
@@ -397,7 +407,7 @@ class ChessGame:
 
         return pawn_moves_list
 
-    def rook_moves(self, location: Tuple[int, int], turn: str) -> List[Tuple[int, int]]:
+    def rook_moves(self, location: Tuple[int, int], turn: str) -> List[Tuple[int, int]]:    
         """
         This function is responsible for finding all of a rook's possible moves
         
@@ -665,7 +675,7 @@ class ChessGame:
 
         return knight_moves_list
 
-    def check(self, turn: str) -> bool:
+    def is_king_in_check(self, turn: str) -> bool:
         """
         This function is responsible for determining whether the player's king is in check
         
@@ -789,7 +799,7 @@ class ChessGame:
                         piece = self.black_pieces[index]
                         self.black_pieces.pop(index)
                         take = True
-                    if not self.check(turn):
+                    if not self.is_king_in_check(turn):
                         piece_moves_list.append(move)
                     self.white_locations[i] = old_pos
                     if take:
@@ -805,7 +815,7 @@ class ChessGame:
                         piece = self.white_pieces[index]
                         self.white_pieces.pop(index)
                         take = True
-                    if not self.check(turn):
+                    if not self.is_king_in_check(turn):
                         piece_moves_list.append(move)
                     self.black_locations[i] = old_pos
                     if take:
@@ -864,7 +874,7 @@ class ChessGame:
         font = pygame.font.Font('freesansbold.ttf', 25)
         message = ''
         # Determines either stalemate or winner and checkmate
-        if self.check(self.player_turn):
+        if self.is_king_in_check(self.player_turn):
             if self.player_turn == 'black':
                 winner = 'White'
             elif self.player_turn == 'white':
@@ -928,6 +938,7 @@ class ChessGame:
         Runs the game on the pygame screen
         """
         while self.running:
+            self.counter = (self.counter + 1) % 25
             self.timer.tick(self.fps)
             pygame.display.set_caption(self.CAPTION)
             self.screen.fill((50, 50, 50))

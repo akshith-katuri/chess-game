@@ -9,11 +9,12 @@ This is an implementation of a chess game in Python using the Pygame library.
 - Basic piece capturing
 - Check/Check mate 
 - Stalemate
-- En passant and Castling moves
+- En passant and Castling under correct conditions
 - Pawn promotion
 - UI indications for possible moves for each piece on-click
 - UI to show captured pieces and game over
-- UI Button to start new game
+- UI flashing king square when in check
+- UI button to start new game
 
 ## Prerequisites
 - Python 3.3
@@ -35,12 +36,8 @@ This is an implementation of a chess game in Python using the Pygame library.
 - Start the game by running `python chess_game.py`
 
 ## Controls
-- Click on a piece to select it. Then You will see all possible moves of the selected piece
+- Click on a piece to select it. Then, you will see all possible moves of the selected piece
 - Click on a valid square to move the selected piece.
 
 ## Game Rules
-- Follows standard chess rules for moves and captures.
-- En passant is available when applicable.
-- Castling is allowed under correct conditions.
-- Pawn promotion occurs when a pawn reaches the eighth rank.
-- Detecting Check/Checkmate, Stalemate
+- Follows standard chess rules
